@@ -1,15 +1,15 @@
 # Flutter Clock
 
-Welcome to Flutter Clock!
+This clock face was inspired by neumorphic design. The main goal during development was simplicity and attention to details.
 
-See [flutter.dev/clock](https://flutter.dev/clock) for how to get started, submission requirements, contest rules, and FAQs.
+Clock face's hands are sublty animated and have slight drop shadow that is always oriented in the same direction. Bevels of the clock cast slight shadows the same way.
 
-See a [live demo](https://maryx.github.io/flutter_clock) with Flutter for Web!
+This clock face was prepared to work both in light and dark mode.
 
-Example [Analog Clock](analog_clock)
+A small touch is a collection of icons depicting current weather conditions in the background of the clock face. The icons used are [LineIcons](https://lineicons.com/). The change of weather condition is animated with slide and fade animation.
 
-<img src='analog_clock/analog.gif' width='350'>
+<img src='analog_clock/clock.gif' width='640'>
 
-Example [Digital Clock](digital_clock)
+<img src='analog_clock/light.png' width='640'>
 
-<img src='digital_clock/digital.gif' width='350'>
+<img src='analog_clock/dark.png' width='640'>

@@ -4,14 +4,15 @@
 
 import 'dart:async';
 
+import 'package:analog_clock/icons/widgets/clock_widgets.dart';
+import 'package:flutter_clock_helper/customizer.dart';
 import 'package:flutter_clock_helper/model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:intl/intl.dart';
 import 'package:vector_math/vector_math_64.dart' show radians;
 
-import 'container_hand.dart';
-import 'drawn_hand.dart';
+import 'icons/weather_icons_icons.dart';
 
 /// Total distance traveled by a second or a minute hand, each second or minute,
 /// respectively.
@@ -34,11 +35,18 @@ class AnalogClock extends StatefulWidget {
 
 class _AnalogClockState extends State<AnalogClock> {
   var _now = DateTime.now();
-  var _temperature = '';
-  var _temperatureRange = '';
-  var _condition = '';
-  var _location = '';
+  WeatherCondition _condition;
   Timer _timer;
+
+  final weatherMap = {
+    WeatherCondition.sunny: WeatherIcons.sun,
+    WeatherCondition.cloudy: WeatherIcons.cloud_solid,
+    WeatherCondition.foggy: WeatherIcons.smog_solid,
+    WeatherCondition.rainy: WeatherIcons.cloud_rain_solid,
+    WeatherCondition.thunderstorm: WeatherIcons.bolt_solid,
+    WeatherCondition.snowy: WeatherIcons.cloud_meatball_solid,
+    WeatherCondition.windy: WeatherIcons.wind_solid,
+  };
 
   @override
   void initState() {
@@ -67,10 +75,7 @@ class _AnalogClockState extends State<AnalogClock> {
 
   void _updateModel() {
     setState(() {
-      _temperature = widget.model.temperatureString;
-      _temperatureRange = '(${widget.model.low} - ${widget.model.highString})';
-      _condition = widget.model.weatherString;
-      _location = widget.model.location;
+      _condition = widget.model.weatherCondition;
     });
   }
 
@@ -88,94 +93,81 @@ class _AnalogClockState extends State<AnalogClock> {
 
   @override
   Widget build(BuildContext context) {
-    // There are many ways to apply themes to your clock. Some are:
-    //  - Inherit the parent Theme (see ClockCustomizer in the
-    //    flutter_clock_helper package).
-    //  - Override the Theme.of(context).colorScheme.
-    //  - Create your own [ThemeData], demonstrated in [AnalogClock].
-    //  - Create a map of [Color]s to custom keys, demonstrated in
-    //    [DigitalClock].
     final customTheme = Theme.of(context).brightness == Brightness.light
         ? Theme.of(context).copyWith(
             // Hour hand.
-            primaryColor: Color(0xFF4285F4),
+            primaryColor: Colors.grey[800],
             // Minute hand.
-            highlightColor: Color(0xFF8AB4F8),
+            highlightColor: Colors.grey[800],
             // Second hand.
-            accentColor: Color(0xFF669DF6),
-            backgroundColor: Color(0xFFD2E3FC),
+            accentColor: Colors.red[800],
+            // Tick color
+            cursorColor: Colors.grey[900],
+            // Shadow color
+            canvasColor: Colors.grey[500],
+            // Inner shadow color
+            dividerColor: Colors.grey[400],
+            // Icon color:
+            errorColor: Colors.grey[800].withOpacity(0.1),
+            backgroundColor: Colors.grey[300],
           )
         : Theme.of(context).copyWith(
-            primaryColor: Color(0xFFD2E3FC),
-            highlightColor: Color(0xFF4285F4),
-            accentColor: Color(0xFF8AB4F8),
+            // Hour hand.
+            primaryColor: Colors.grey[400],
+            // Minute hand.
+            highlightColor: Colors.grey[400],
+            // Second hand.
+            accentColor: Colors.red[800],
+            // Tick color
+            cursorColor: Colors.grey[900],
+            // Shadow color
+            canvasColor: Colors.grey[900],
+            // Inner shadow color
+            dividerColor: Colors.grey[900],
+            // Icon color:
+            errorColor: Colors.grey[400].withOpacity(0.1),
             backgroundColor: Color(0xFF3C4043),
           );
 
     final time = DateFormat.Hms().format(DateTime.now());
-    final weatherInfo = DefaultTextStyle(
-      style: TextStyle(color: customTheme.primaryColor),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(_temperature),
-          Text(_temperatureRange),
-          Text(_condition),
-          Text(_location),
-        ],
-      ),
-    );
 
-    return Semantics.fromProperties(
-      properties: SemanticsProperties(
-        label: 'Analog clock with time $time',
-        value: time,
-      ),
-      child: Container(
-        color: customTheme.backgroundColor,
-        child: Stack(
-          children: [
-            // Example of a hand drawn with [CustomPainter].
-            DrawnHand(
-              color: customTheme.accentColor,
-              thickness: 4,
-              size: 1,
-              angleRadians: _now.second * radiansPerTick,
+    final icon = weatherMap[_condition];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final unit = constraints.biggest.width / 50;
+
+        return Semantics.fromProperties(
+          properties: SemanticsProperties(
+            label: 'Analog clock with time $time',
+            value: time,
+          ),
+          child: Container(
+            padding: EdgeInsets.all(2 * unit),
+            color: customTheme.backgroundColor,
+            child: Stack(
+              children: [
+                OuterShadows(customTheme: customTheme, unit: unit),
+                AnimatedClockIcon(
+                    customTheme: customTheme, unit: unit, icon: icon),
+                InnerShadows(customTheme: customTheme, unit: unit),
+                ClockTicks(customTheme: customTheme, unit: unit),
+                HourHandShadow(customTheme: customTheme, unit: unit, now: _now),
+                MinuteHandShadow(
+                    customTheme: customTheme, unit: unit, now: _now),
+                SecondHandShadow(
+                    customTheme: customTheme, unit: unit, now: _now),
+                HourHand(customTheme: customTheme, unit: unit, now: _now),
+                MinuteHand(customTheme: customTheme, unit: unit, now: _now),
+                SecondHand(customTheme: customTheme, now: _now, unit: unit),
+                SecondHandCircle(
+                    customTheme: customTheme, now: _now, unit: unit),
+                ClockPin(customTheme: customTheme, unit: unit),
+              ],
             ),
-            DrawnHand(
-              color: customTheme.highlightColor,
-              thickness: 16,
-              size: 0.9,
-              angleRadians: _now.minute * radiansPerTick,
-            ),
-            // Example of a hand drawn with [Container].
-            ContainerHand(
-              color: Colors.transparent,
-              size: 0.5,
-              angleRadians: _now.hour * radiansPerHour +
-                  (_now.minute / 60) * radiansPerHour,
-              child: Transform.translate(
-                offset: Offset(0.0, -60.0),
-                child: Container(
-                  width: 32,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: customTheme.primaryColor,
-                  ),
-                ),
-              ),
-            ),
-            Positioned(
-              left: 0,
-              bottom: 0,
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: weatherInfo,
-              ),
-            ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

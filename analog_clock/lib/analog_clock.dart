@@ -135,7 +135,9 @@ class _AnalogClockState extends State<AnalogClock> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final unit = constraints.biggest.width / 50;
+        final aspectRatio =
+            constraints.biggest.width / constraints.biggest.height;
+        final unit = constraints.biggest.width / 30 / aspectRatio;
 
         return Semantics.fromProperties(
           properties: SemanticsProperties(
